@@ -14,13 +14,6 @@ type cfg struct {
 	SlackChannelID string `json:"slackChannelID"`
 }
 
-type TestResult struct {
-	Name           string
-	WithWeek       bool
-	TestDate       string
-	LastTestResult string
-}
-
 func readConfigFromFile(filename string) (*cfg, error) {
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
