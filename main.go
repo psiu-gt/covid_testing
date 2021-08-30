@@ -9,7 +9,9 @@ import (
 )
 
 type cfg struct {
-	SheetsID string `json:"sheetsID"`
+	SheetsID       string `json:"sheetsID"`
+	SlackToken     string `json:"slackToken"`
+	SlackChannelID string `json:"slackChannelID"`
 }
 
 type TestResult struct {
@@ -41,6 +43,13 @@ func main() {
 	results, err := sheets.ReadSheets()
 	if err != nil {
 		log.Fatalf("sheets.ReadSheets(): %v", err)
+	}
+
+	slackClient := Slack{}
+	slackClient.New(config.SlackToken, config.SlackChannelID)
+	err = slackClient.SendMessage(fmt.Sprintf("%v", results))
+	if err != nil {
+		log.Fatalf("slackClient.SendMessage(): %v", err)
 	}
 
 	fmt.Println(results)
