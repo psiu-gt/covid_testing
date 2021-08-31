@@ -8,6 +8,11 @@ type TestResult struct {
 	LastTestResult string
 }
 
+type NameIDPair struct {
+	Name string
+	ID   string
+}
+
 func GetUntested(results *[]TestResult) *[]TestResult {
 	var untested []TestResult
 	for _, record := range *results {

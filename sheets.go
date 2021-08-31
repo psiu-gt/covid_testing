@@ -14,10 +14,6 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-type Sheets struct {
-	sheetID string
-}
-
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) (*http.Client, error) {
 	// The file token.json stores the user's access and refresh tokens, and is
@@ -78,34 +74,47 @@ func saveToken(path string, token *oauth2.Token) error {
 	return nil
 }
 
-// ReadSheets reads the Google Sheet and returns the data.
-func (s Sheets) ReadSheets() (*[]TestResult, error) {
+type Sheets struct {
+	sheetID    string
+	client     *sheets.Service
+	readRange  string
+	writeRange string
+}
+
+func (s *Sheets) New(sheetID, readRange, writeRange string) error {
+	s.sheetID = sheetID
+	s.readRange = readRange
+	s.writeRange = writeRange
+
 	// Read the credentials.
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
-		return nil, errors.Annotate(err, "ReadSheets(): unable to readclient secret file credentials.json")
+		return errors.Annotate(err, "ReadSheets(): unable to readclient secret file credentials.json")
 	}
 
 	// If modifying these scopes, delete the previously saved token.json.
-	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets.readonly")
+	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
 	if err != nil {
-		return nil, errors.Annotate(err, "ReadSheets(): unable to parse client secret file to config")
+		return errors.Annotate(err, "ReadSheets(): unable to parse client secret file to config")
 	}
 	client, err := getClient(config)
 	if err != nil {
-		return nil, errors.Annotate(err, "ReadSheets(): unable to create the client")
+		return errors.Annotate(err, "ReadSheets(): unable to create the client")
 	}
 
 	// Create the client with the obtained credentials.
 	srv, err := sheets.New(client)
 	if err != nil {
-		return nil, errors.Annotate(err, "ReadSheets(): unable to retrieve Google Sheets client")
+		return errors.Annotate(err, "ReadSheets(): unable to retrieve Google Sheets client")
 	}
+	s.client = srv
 
-	// Prints the names and majors of students in a sample spreadsheet:
-	// https://docs.google.com/spreadsheets/d/1ordb1uYNAvJHnQAN_7uLjG0d8gUhPSvjfQDQ7XHGrq8/edit#gid=1642678966
-	readRange := "Dashboard!A4:D"
-	resp, err := srv.Spreadsheets.Values.Get(s.sheetID, readRange).Do()
+	return nil
+}
+
+// ReadSheets reads the Google Sheet and returns the data.
+func (s *Sheets) ReadSheets() (*[]TestResult, error) {
+	resp, err := s.client.Spreadsheets.Values.Get(s.sheetID, s.readRange).Do()
 	if err != nil {
 		return nil, errors.Annotate(err, "ReadSheets(): unable to retrieve data from sheet")
 	}
@@ -126,4 +135,25 @@ func (s Sheets) ReadSheets() (*[]TestResult, error) {
 	}
 
 	return &results, nil
+}
+
+// Write names to Google Sheets. Each name is a new row.
+func (s *Sheets) WriteNames(usernames []string) error {
+	// Transform the array of usernames to a 2D array. Each name becomes a new row.
+	values := make([][]interface{}, len(usernames))
+	for i, username := range usernames {
+		values[i] = make([]interface{}, 1)
+		values[i][0] = username
+	}
+
+	var valRange sheets.ValueRange = sheets.ValueRange{
+		Values: values,
+	}
+
+	_, err := s.client.Spreadsheets.Values.Update(s.sheetID, s.writeRange, &valRange).ValueInputOption("RAW").Do()
+	if err != nil {
+		return errors.Annotate(err, "client.Spreadsheets.Values.Update(): failed to update the Spreadsheet")
+	}
+
+	return nil
 }
