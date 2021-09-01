@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"strings"
 )
 
@@ -49,14 +48,6 @@ func constructNotificationMessage(untested *[]TestResult, nameToIDs map[string]s
 	lines = append(lines, "GT Surveillance Testing Locations & Hours: https://health.gatech.edu/coronavirus/testing")
 	lines = append(lines, "Form Link: https://forms.gle/sydSGQpTEgPrGxWy9")
 	return strings.Join(lines, "\n")
-}
-
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Bruh")
-}
-
-func setupRoutes() {
-	http.HandleFunc("/", homePage)
 }
 
 func main() {
@@ -120,8 +111,4 @@ func main() {
 	if err != nil {
 		log.Fatalf("slackClient.SendMessage(): %v", err)
 	}
-
-	fmt.Println("Go Web App Started on Port 3000")
-	setupRoutes()
-	http.ListenAndServe(":3000", nil)
 }
