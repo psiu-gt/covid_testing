@@ -1,4 +1,4 @@
-apiVersion: batch/v1
+apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: covid-testing
@@ -14,10 +14,7 @@ spec:
       template:
         spec:
           containers:
-          - name: covid-testing
-            image: busybox
-            args:
-            - /bin/sh
-            - -c
-            - date; echo "Hello, World!"
+          - image: us-east1-docker.pkg.dev/covid-testing-bot/covid-repo/covid-testing:v6
+            imagePullPolicy: IfNotPresent
+            name: covid-testing
           restartPolicy: OnFailure
