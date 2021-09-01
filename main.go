@@ -115,13 +115,13 @@ func main() {
 		log.Fatalf("no message to send")
 	}
 
-	fmt.Println("Go Web App Started on Port 3000")
-	setupRoutes()
-	http.ListenAndServe(":3000", nil)
-
 	log.Println("Sending message to Slack")
 	err = slackClient.SendMessage(msg)
 	if err != nil {
 		log.Fatalf("slackClient.SendMessage(): %v", err)
 	}
+
+	fmt.Println("Go Web App Started on Port 3000")
+	setupRoutes()
+	http.ListenAndServe(":3000", nil)
 }
