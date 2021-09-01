@@ -41,7 +41,7 @@ func constructNotificationMessage(untested *[]TestResult, nameToIDs map[string]s
 	for _, entry := range *untested {
 		id, ok := nameToIDs[entry.Name]
 		if !ok {
-			fmt.Println("WARNING: entry not found, skipping")
+			fmt.Println("WARNING: entry not found, skipping", entry.Name)
 			continue
 		}
 		lines = append(lines, fmt.Sprintf("<@%s>", id))
@@ -60,6 +60,8 @@ func setupRoutes() {
 }
 
 func main() {
+	log.Println("Starting service...")
+
 	config, err := readConfigFromFile("config.json")
 	if err != nil {
 		log.Fatalf("readConfigFromFile: %v", err)
@@ -78,6 +80,7 @@ func main() {
 
 	// Update the list of names for the Google Form.
 	// The names are extracted from Slack and written to Google Sheets, which populates the Google Forms dropdown.
+	log.Println("Updating Google Sheets with Slack users.")
 	users, err := slackClient.GetUsers()
 	if err != nil {
 		log.Fatalf("slackClient.GetUsers(): %v", err)
@@ -98,6 +101,7 @@ func main() {
 	}
 
 	// Get the test results.
+	log.Println("Getting test results from Google Sheets...")
 	results, err := sheets.ReadSheets()
 	if err != nil {
 		log.Fatalf("sheets.ReadSheets(): %v", err)
@@ -115,6 +119,7 @@ func main() {
 	setupRoutes()
 	http.ListenAndServe(":3000", nil)
 
+	log.Println("Sending message to Slack")
 	err = slackClient.SendMessage(msg)
 	if err != nil {
 		log.Fatalf("slackClient.SendMessage(): %v", err)
