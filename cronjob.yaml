@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: covid-testing
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "0 13 * * *"
   concurrencyPolicy: Allow
   startingDeadlineSeconds: 100
   suspend: false
